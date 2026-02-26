@@ -1,0 +1,124 @@
+version: "3.9"
+
+services:
+  # ── FastAPI Backend ──────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: product-expert-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://expert:${POSTGRES_PASSWORD:-expert}@postgres:5432/product_expert
+      REDIS_URL: redis://redis:6379/0
+      EMBEDDING_API_URL: ${EMBEDDING_API_URL:-http://host.docker.internal:11434/api/embeddings}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-nomic-embed-text}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-ollama}
+      LLM_API_URL: ${LLM_API_URL:-http://host.docker.internal:11434/api/generate}
+      LLM_MODEL: ${LLM_MODEL:-llama3.1:8b}
+      LLM_PROVIDER: ${LLM_PROVIDER:-ollama}
+      API_KEYS: ${API_KEYS:-dev-key-001:admin,sales-key-001:sales_engineer}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:5173,http://localhost}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_FORMAT: json
+      MAX_UPLOAD_SIZE_MB: 50
+    volumes:
+      - upload_data:/app/data/uploads
+      - app_logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # ── PostgreSQL + pgvector ────────────────────────────────────────────
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: product-expert-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: product_expert
+      POSTGRES_USER: expert
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-expert}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=en_US.utf8 --lc-ctype=en_US.utf8"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./db-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U expert -d product_expert"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    shm_size: 256mb
+    command:
+      - "postgres"
+      - "-c"
+      - "shared_preload_libraries=pg_stat_statements"
+      - "-c"
+      - "max_connections=100"
+      - "-c"
+      - "shared_buffers=256MB"
+      - "-c"
+      - "work_mem=16MB"
+      - "-c"
+      - "maintenance_work_mem=128MB"
+      - "-c"
+      - "effective_cache_size=512MB"
+
+  # ── Redis (caching + job queue) ──────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: product-expert-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru --appendonly yes
+
+  # ── Nginx Reverse Proxy ─────────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: product-expert-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./frontend/dist:/usr/share/nginx/html:ro
+    depends_on:
+      - api
+    networks:
+      - backend
+
+volumes:
+  pg_data:
+    driver: local
+  redis_data:
+    driver: local
+  upload_data:
+    driver: local
+  app_logs:
+    driver: local
+
+networks:
+  backend:
+    driver: bridge
