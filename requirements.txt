@@ -1,0 +1,42 @@
+# ── Core Framework ────────────────────────────────────────────────────
+fastapi==0.115.*
+uvicorn[standard]==0.34.*
+uvloop==0.21.*
+httptools==0.6.*
+pydantic==2.10.*
+pydantic-settings==2.7.*
+
+# ── Database ──────────────────────────────────────────────────────────
+asyncpg==0.30.*
+pgvector==0.3.*
+alembic==1.14.*
+sqlalchemy[asyncio]==2.0.*
+
+# ── HTTP Client (for embedding/LLM calls) ────────────────────────────
+httpx==0.28.*
+
+# ── File Processing ──────────────────────────────────────────────────
+python-multipart==0.0.18
+pymupdf==1.25.*         # PDF text extraction (fitz)
+# pdfplumber==0.11.*    # Alternative PDF extraction
+
+# ── Caching & Job Queue ──────────────────────────────────────────────
+redis[hiredis]==5.2.*
+arq==0.26.*             # Async job queue on Redis
+
+# ── Utilities ─────────────────────────────────────────────────────────
+numpy==2.2.*
+python-dateutil==2.9.*
+
+# ── Observability ────────────────────────────────────────────────────
+structlog==24.4.*       # Structured JSON logging
+
+# ── Testing ──────────────────────────────────────────────────────────
+pytest==8.3.*
+pytest-asyncio==0.25.*
+pytest-cov==6.0.*
+httpx                   # Also used for TestClient
+
+# ── Code Quality ─────────────────────────────────────────────────────
+ruff==0.9.*
+mypy==1.14.*

@@ -1,0 +1,134 @@
+# ══════════════════════════════════════════════════════════════════════
+# alembic.ini — Database migration configuration
+# ══════════════════════════════════════════════════════════════════════
+
+[alembic]
+script_location = alembic
+prepend_sys_path = .
+
+# Connection string — overridden at runtime by env.py
+sqlalchemy.url = postgresql+asyncpg://expert:expert@localhost:5432/product_expert
+
+[loggers]
+keys = root,sqlalchemy,alembic
+
+[handlers]
+keys = console
+
+[formatters]
+keys = generic
+
+[logger_root]
+level = WARN
+handlers = console
+
+[logger_sqlalchemy]
+level = WARN
+handlers =
+qualname = sqlalchemy.engine
+
+[logger_alembic]
+level = INFO
+handlers =
+qualname = alembic
+
+[handler_console]
+class = StreamHandler
+args = (sys.stderr,)
+level = NOTSET
+formatter = generic
+
+[formatter_generic]
+format = %(levelname)-5.5s [%(name)s] %(message)s
+datefmt = %H:%M:%S
+
+
+# ══════════════════════════════════════════════════════════════════════
+# FILE: alembic/env.py
+# ══════════════════════════════════════════════════════════════════════
+#
+# import asyncio
+# import os
+# from logging.config import fileConfig
+#
+# from alembic import context
+# from sqlalchemy import pool
+# from sqlalchemy.ext.asyncio import async_engine_from_config
+#
+# config = context.config
+# if config.config_file_name is not None:
+#     fileConfig(config.config_file_name)
+#
+# # Override from environment
+# db_url = os.environ.get("DATABASE_URL", config.get_main_option("sqlalchemy.url"))
+# config.set_main_option("sqlalchemy.url", db_url)
+#
+# target_metadata = None  # We use raw SQL migrations, not SQLAlchemy models
+#
+#
+# def run_migrations_offline() -> None:
+#     url = config.get_main_option("sqlalchemy.url")
+#     context.configure(url=url, target_metadata=target_metadata, literal_binds=True)
+#     with context.begin_transaction():
+#         context.run_migrations()
+#
+#
+# def do_run_migrations(connection):
+#     context.configure(connection=connection, target_metadata=target_metadata)
+#     with context.begin_transaction():
+#         context.run_migrations()
+#
+#
+# async def run_async_migrations() -> None:
+#     connectable = async_engine_from_config(
+#         config.get_section(config.config_ini_section, {}),
+#         prefix="sqlalchemy.",
+#         poolclass=pool.NullPool,
+#     )
+#     async with connectable.connect() as connection:
+#         await connection.run_sync(do_run_migrations)
+#     await connectable.dispose()
+#
+#
+# def run_migrations_online() -> None:
+#     asyncio.run(run_async_migrations())
+#
+#
+# if context.is_offline_mode():
+#     run_migrations_offline()
+# else:
+#     run_migrations_online()
+
+
+# ══════════════════════════════════════════════════════════════════════
+# FILE: alembic/versions/001_initial_schema.py
+# ══════════════════════════════════════════════════════════════════════
+#
+# """Initial schema from db-schema.sql
+#
+# Revision ID: 001_initial
+# Create Date: 2026-02-17
+# """
+# from pathlib import Path
+# from alembic import op
+#
+# revision = "001_initial"
+# down_revision = None
+# branch_labels = None
+# depends_on = None
+#
+#
+# def upgrade() -> None:
+#     schema_sql = Path(__file__).parent.parent.parent / "db-schema.sql"
+#     op.execute(schema_sql.read_text())
+#
+#
+# def downgrade() -> None:
+#     tables = [
+#         "audit_log", "spec_conflicts", "equivalence_rules", "document_products",
+#         "document_chunks", "documents", "model_patterns", "spec_registry",
+#         "products", "product_families", "brands", "users",
+#     ]
+#     for t in tables:
+#         op.execute(f"DROP TABLE IF EXISTS {t} CASCADE")
+#     op.execute("DROP EXTENSION IF EXISTS vector")

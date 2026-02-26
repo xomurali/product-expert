@@ -1,0 +1,67 @@
+# ── Database ──────────────────────────────────────────────────────────
+DATABASE_URL=postgresql+asyncpg://expert:expert@postgres:5432/product_expert
+POSTGRES_PASSWORD=expert
+DB_POOL_MIN=5
+DB_POOL_MAX=20
+
+# ── Redis ─────────────────────────────────────────────────────────────
+REDIS_URL=redis://redis:6379/0
+CACHE_TTL_SECONDS=3600
+
+# ── Embedding Service ────────────────────────────────────────────────
+# Options: ollama | openai | huggingface
+EMBEDDING_PROVIDER=ollama
+EMBEDDING_API_URL=http://localhost:11434/api/embeddings
+EMBEDDING_MODEL=nomic-embed-text
+EMBEDDING_DIM=768
+
+# Uncomment for OpenAI embeddings:
+# EMBEDDING_PROVIDER=openai
+# OPENAI_API_KEY=sk-...
+# EMBEDDING_MODEL=text-embedding-3-small
+
+# ── LLM (for RAG Q&A) ───────────────────────────────────────────────
+# Options: ollama | openai | anthropic
+LLM_PROVIDER=ollama
+LLM_API_URL=http://localhost:11434/api/generate
+LLM_MODEL=llama3.1:8b
+LLM_MAX_TOKENS=2048
+LLM_TEMPERATURE=0.1
+
+# Uncomment for OpenAI:
+# LLM_PROVIDER=openai
+# OPENAI_LLM_API_KEY=sk-...
+# LLM_MODEL=gpt-4o-mini
+
+# Uncomment for Anthropic:
+# LLM_PROVIDER=anthropic
+# ANTHROPIC_API_KEY=sk-ant-...
+# LLM_MODEL=claude-sonnet-4-20250514
+
+# ── Authentication ───────────────────────────────────────────────────
+# Format: key:role,key:role
+API_KEYS=dev-key-001:admin,sales-key-001:sales_engineer,pm-key-001:product_manager
+# JWT_SECRET=your-secret-here  # Optional: enable JWT auth
+
+# ── CORS ─────────────────────────────────────────────────────────────
+CORS_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost
+
+# ── Ingestion ────────────────────────────────────────────────────────
+MAX_UPLOAD_SIZE_MB=50
+UPLOAD_DIR=/app/data/uploads
+BACKGROUND_WORKERS=2
+
+# ── RAG Settings ─────────────────────────────────────────────────────
+RAG_CONTEXT_BUDGET_TOKENS=6000
+RAG_MAX_CHUNKS=15
+RAG_VECTOR_WEIGHT=0.6
+RAG_KEYWORD_WEIGHT=0.4
+
+# ── Logging ──────────────────────────────────────────────────────────
+LOG_LEVEL=INFO
+LOG_FORMAT=json
+
+# ── Rate Limiting ────────────────────────────────────────────────────
+RATE_LIMIT_ASK=20/minute
+RATE_LIMIT_INGEST=10/minute
+RATE_LIMIT_DEFAULT=100/minute
