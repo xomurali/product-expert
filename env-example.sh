@@ -1,6 +1,6 @@
 # ── Database ──────────────────────────────────────────────────────────
 DATABASE_URL=postgresql+asyncpg://expert:expert@postgres:5432/product_expert
-POSTGRES_PASSWORD=expert
+POSTGRES_PASSWORD=ChangeMe_Secure3!
 DB_POOL_MIN=5
 DB_POOL_MAX=20
 
